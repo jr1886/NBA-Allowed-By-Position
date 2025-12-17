@@ -36,6 +36,9 @@ jobs:
 
       - name: Run report
         env:
+          NBA_API_PYTHON_REQUESTS_TIMEOUT: "120"
+          NBA_API_PYTHON_RETRIES: "8"
+          NBA_API_PYTHON_USER_AGENT: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
           OUTPUT_DIR: output
           SEASON_TYPE: Regular Season
           LAST_N_GAMES_PER_TEAM: ${{ inputs.last_n_games || '10' }}
