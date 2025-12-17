@@ -109,25 +109,24 @@ def main():
 
     print(f"Season={season} | SeasonType={season_type} | LastNGamesPerTeam={last_n_games_per_team}")
 
-    # 1) Player positions
-    bio = safe_endpoint(
+   # 1) Player positions
+bio = safe_endpoint(
     leaguedashplayerbiostats.LeagueDashPlayerBioStats,
     season=season,
     season_type_all_star=season_type,
 ).get_data_frames()[0]
-).get_data_frames()[0]
 
-    pos_col = None
-    for c in ["PLAYER_POSITION", "POSITION", "POS"]:
-        if c in bio.columns:
-            pos_col = c
-            break
-    if pos_col is None:
-        raise RuntimeError(f"Could not find a position column. Columns: {list(bio.columns)}")
+pos_col = None
+for c in ["PLAYER_POSITION", "POSITION", "POS"]:
+    if c in bio.columns:
+        pos_col = c
+        break
+if pos_col is None:
+    raise RuntimeError(f"Could not find a position column. Columns: {list(bio.columns)}")
 
-    bio = bio[["PLAYER_ID", "PLAYER_NAME", pos_col]].copy()
-    bio["PLAYER_ID"] = bio["PLAYER_ID"].astype(int)
-    bio["POS_GROUP"] = bio[pos_col].astype(str).map(normalize_position)
+bio = bio[["PLAYER_ID", "PLAYER_NAME", pos_col]].copy()
+bio["PLAYER_ID"] = bio["PLAYER_ID"].astype(int)
+bio["POS_GROUP"] = bio[pos_col].astype(str).map(normalize_position)
 
     # 2) Team game logs -> last N games per team
    team_logs = safe_endpoint(
