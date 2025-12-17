@@ -101,10 +101,9 @@ def main():
 
     # 1) Player positions
     bio = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
-        season=season,
-        season_type_all_star=season_type,
-        per_mode_detailed="PerGame",
-    ).get_data_frames()[0]
+    season=season,
+    season_type_all_star=season_type,
+).get_data_frames()[0]
 
     pos_col = None
     for c in ["PLAYER_POSITION", "POSITION", "POS"]:
