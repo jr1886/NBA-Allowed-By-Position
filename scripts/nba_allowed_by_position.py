@@ -10,8 +10,18 @@ from nba_api.stats.endpoints import leaguegamelog, leaguedashplayerbiostats
 
 import gspread
 from google.oauth2.service_account import Credentials
+import inspect
 
-
+def safe_endpoint(endpoint_cls, **kwargs):
+    """
+    Create an nba_api endpoint instance, but only pass kwargs that the installed
+    nba_api version actually supports.
+    """
+    sig = inspect.signature(endpoint_cls.__init__)
+    allowed = set(sig.parameters.keys())
+    filtered = {k: v for k, v in kwargs.items() if k in allowed and v is not None}
+    return endpoint_cls(**filtered)
+    
 ET = ZoneInfo("America/New_York")
 
 
@@ -100,9 +110,11 @@ def main():
     print(f"Season={season} | SeasonType={season_type} | LastNGamesPerTeam={last_n_games_per_team}")
 
     # 1) Player positions
-    bio = leaguedashplayerbiostats.LeagueDashPlayerBioStats(
+    bio = safe_endpoint(
+    leaguedashplayerbiostats.LeagueDashPlayerBioStats,
     season=season,
     season_type_all_star=season_type,
+).get_data_frames()[0]
 ).get_data_frames()[0]
 
     pos_col = None
@@ -118,11 +130,12 @@ def main():
     bio["POS_GROUP"] = bio[pos_col].astype(str).map(normalize_position)
 
     # 2) Team game logs -> last N games per team
-    team_logs = leaguegamelog.LeagueGameLog(
-        season=season,
-        season_type_all_star=season_type,
-        player_or_team_abbreviation="T",
-    ).get_data_frames()[0]
+   team_logs = safe_endpoint(
+    leaguegamelog.LeagueGameLog,
+    season=season,
+    season_type_all_star=season_type,
+    player_or_team_abbreviation="T",
+).get_data_frames()[0]
 
     team_logs["GAME_DATE"] = pd.to_datetime(team_logs["GAME_DATE"])
     team_logs = team_logs.sort_values(["TEAM_ID", "GAME_DATE"])
@@ -135,11 +148,12 @@ def main():
     )
 
     # 3) Player game logs -> filter to each defensive team’s last N games
-    player_logs = leaguegamelog.LeagueGameLog(
-        season=season,
-        season_type_all_star=season_type,
-        player_or_team_abbreviation="P",
-    ).get_data_frames()[0]
+    player_logs = safe_endpoint(
+    leaguegamelog.LeagueGameLog,
+    season=season,
+    season_type_all_star=season_type,
+    player_or_team_abbreviation="P",
+).get_data_frames()[0]
 
     needed = ["GAME_ID", "MATCHUP", "PLAYER_ID", "PTS", "AST", "REB"]
     player_logs = player_logs[needed].copy()
